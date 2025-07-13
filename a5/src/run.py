@@ -132,14 +132,17 @@ elif args.function == 'finetune':
     #     You can use the args.reading_params_path flag to switch between the
     #     number of epochs for each case.
     if args.reading_params_path is None:
-        text = open(args.finetune_corpus_path, encoding='utf-8').read() 
-        train_dataset = dataset.NameDataset(pretrain_dataset, text) 
-        tconf = trainer.TrainerConfig(max_epochs=75, batch_size=256, learning_rate=args.finetune_lr,
-                            lr_decay=True, warmup_tokens=512*20, final_tokens=200*len(pretrain_dataset)*block_size,
-                            num_workers=4, writer=writer)
-        trainer = trainer.Trainer(model, train_dataset, None, tconf)
-        trainer.train()
-        torch.save(model.state_dict(), args.writing_params_path)
+        max_epochs = 75
+    else:
+        max_epochs = 10
+    text = open(args.finetune_corpus_path, encoding='utf-8').read() 
+    train_dataset = dataset.NameDataset(pretrain_dataset, text) 
+    tconf = trainer.TrainerConfig(max_epochs=max_epochs, batch_size=256, learning_rate=args.finetune_lr,
+                        lr_decay=True, warmup_tokens=512*20, final_tokens=200*len(pretrain_dataset)*block_size,
+                        num_workers=4, writer=writer)
+    trainer = trainer.Trainer(model, train_dataset, None, tconf)
+    trainer.train()
+    torch.save(model.state_dict(), args.writing_params_path)
      
 elif args.function == 'evaluate':
     assert args.outputs_path is not None
