@@ -65,7 +65,7 @@ Don't change above here; write your code below
 
 if args.variant == 'vanilla':
     # [part c] Make some model here
-    model = model.GPT(mconf)
+    model = model.GPT(mconf).to(device)
 elif args.variant == 'perceiver':
     # set mconf.perceiver, and mconf.bottleneck_dim parameters appropriately.
     pass # [part g] Make some other model here
@@ -139,8 +139,8 @@ elif args.function == 'finetune':
                             num_workers=4, writer=writer)
         trainer = trainer.Trainer(model, train_dataset, None, tconf)
         trainer.train()
+        torch.save(model.state_dict(), args.writing_params_path)
      
-    raise NotImplementedError
 elif args.function == 'evaluate':
     assert args.outputs_path is not None
     assert args.reading_params_path is not None
