@@ -64,7 +64,8 @@ Don't change above here; write your code below
 # note: models should moved to device defined on line 34.
 
 if args.variant == 'vanilla':
-    pass # [part c] Make some model here
+    # [part c] Make some model here
+    model = model.GPT(mconf)
 elif args.variant == 'perceiver':
     # set mconf.perceiver, and mconf.bottleneck_dim parameters appropriately.
     pass # [part g] Make some other model here
@@ -130,6 +131,14 @@ elif args.function == 'finetune':
     #         writer=writer
     #     You can use the args.reading_params_path flag to switch between the
     #     number of epochs for each case.
+    if args.reading_params_path is None:
+        text = open(args.finetune_corpus_path, encoding='utf-8').read() 
+        train_dataset = dataset.NameDataset(pretrain_dataset, text) 
+        tconf = trainer.TrainerConfig(max_epochs=75, batch_size=256, learning_rate=args.finetune_lr,
+                            lr_decay=True, warmup_tokens=512*20, final_tokens=200*len(pretrain_dataset)*block_size,
+                            num_workers=4, writer=writer)
+        trainer = trainer.Trainer(model, train_dataset, None, tconf)
+        trainer.train()
      
     raise NotImplementedError
 elif args.function == 'evaluate':
