@@ -3,6 +3,9 @@ import torch
 from torch.utils.data import Dataset
 import argparse
 
+import random
+
+
 """
 The input-output pairs (x, y) of the NameDataset are of the following form:
 
@@ -168,7 +171,28 @@ class CharCorruptionDataset(Dataset):
 
     def __getitem__(self, idx):
         # TODO [part e]: see spec above
-        raise NotImplementedError
+        document = self.data[idx]
+        trunc_size = random.randint(4, int(self.block_size*7/8))
+        trunc_document = document[:trunc_size]
+        
+        # The mask_size will be trunc_document_size/4 on average and will be between half the average
+        trunc_document_size = len(trunc_document)
+        mask_size_mean = int(trunc_document_size/4)
+        mask_size = random.randint(mask_size_mean-mask_size_mean//2, mask_size_mean+mask_size_mean//2) 
+        mask_start_idx = random.randint(2,trunc_document_size-mask_size-1)
+        prefix = trunc_document[0:mask_start_idx]
+        masked_content = trunc_document[mask_start_idx:mask_start_idx+mask_size]
+        suffix = trunc_document[mask_start_idx+mask_size:]
+        
+        example_x = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content
+        example_x = example_x + self.PAD_CHAR*(self.block_size - len(example_x))
+        example_y = example_x[1:] + self.PAD_CHAR
+        
+        x = torch.tensor([self.stoi[c] for c in example_x], dtype=torch.long)
+        y = torch.tensor([self.stoi[c] for c in example_y], dtype=torch.long)
+        
+        return x, y
+        
 
 """
 Code under here is strictly for your debugging purposes; feel free to modify
