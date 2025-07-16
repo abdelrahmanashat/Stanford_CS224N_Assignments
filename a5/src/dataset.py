@@ -179,7 +179,7 @@ class CharCorruptionDataset(Dataset):
         trunc_document_size = len(trunc_document)
         mask_size_mean = int(trunc_document_size/4)
         mask_size = random.randint(mask_size_mean-mask_size_mean//2, mask_size_mean+mask_size_mean//2) 
-        mask_start_idx = random.randint(2,trunc_document_size-mask_size-1)
+        mask_start_idx = random.randint(0,trunc_document_size-mask_size)
         prefix = trunc_document[0:mask_start_idx]
         masked_content = trunc_document[mask_start_idx:mask_start_idx+mask_size]
         suffix = trunc_document[mask_start_idx+mask_size:]
