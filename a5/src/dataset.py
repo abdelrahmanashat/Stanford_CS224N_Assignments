@@ -185,7 +185,7 @@ class CharCorruptionDataset(Dataset):
         suffix = trunc_document[mask_start_idx+mask_size:]
         
         masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content
-        masked_string = masked_string + self.PAD_CHAR*(self.block_size - len(example_x))
+        masked_string = masked_string + self.PAD_CHAR*(self.block_size - len(masked_string))
         example_x = masked_string[:-1]
         example_y = masked_string[1:]
         
