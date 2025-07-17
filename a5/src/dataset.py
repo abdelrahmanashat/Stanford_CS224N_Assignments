@@ -171,27 +171,62 @@ class CharCorruptionDataset(Dataset):
 
     def __getitem__(self, idx):
         # TODO [part e]: see spec above
+        # document = self.data[idx]
+        # trunc_size = random.randint(4, int(self.block_size*7/8))
+        # trunc_document = document[:trunc_size]
+        
+        # # The mask_size will be trunc_document_size/4 on average and will be between half the average
+        # trunc_document_size = len(trunc_document)
+        # mask_size_mean = int(trunc_document_size/4)
+        # mask_size = random.randint(mask_size_mean-mask_size_mean//2, mask_size_mean+mask_size_mean//2) 
+        # mask_start_idx = random.randint(0,trunc_document_size-mask_size+1)
+        # prefix = trunc_document[:mask_start_idx]
+        # masked_content = trunc_document[mask_start_idx:mask_start_idx+mask_size]
+        # suffix = trunc_document[mask_start_idx+mask_size:]
+        
+        # masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content
+        # masked_string = masked_string + self.PAD_CHAR*(self.block_size - len(masked_string) + 1)
+        # example_x = masked_string[:-1]
+        # example_y = masked_string[1:]
+        
+        # x = torch.tensor([self.stoi[c] for c in example_x], dtype=torch.long)
+        # y = torch.tensor([self.stoi[c] for c in example_y], dtype=torch.long)
+        
+        # return x, y
+        
+        # # Use the idx argument of __getitem__ to retrieve the element of self.data at the given index.
+        # # We'll call the resulting data entry a document.
         document = self.data[idx]
-        trunc_size = random.randint(4, int(self.block_size*7/8))
-        trunc_document = document[:trunc_size]
-        
-        # The mask_size will be trunc_document_size/4 on average and will be between half the average
-        trunc_document_size = len(trunc_document)
-        mask_size_mean = int(trunc_document_size/4)
-        mask_size = random.randint(mask_size_mean-mask_size_mean//2, mask_size_mean+mask_size_mean//2) 
-        mask_start_idx = random.randint(0,trunc_document_size-mask_size)
-        prefix = trunc_document[0:mask_start_idx]
-        masked_content = trunc_document[mask_start_idx:mask_start_idx+mask_size]
-        suffix = trunc_document[mask_start_idx+mask_size:]
-        
+
+        # Randomly truncate the document to a length no less than 4 characters,
+        # and no more than int(self.block_size*7/8) characters.
+        truncated_len = random.randint(4, int(self.block_size * 7/8))
+        truncated_document = document[:truncated_len]
+
+        #  Now, break the (truncated) document into three substrings:
+        #       [prefix] [masked_content] [suffix]
+        masked_content_len = max(0, int(random.gauss(1/4 * truncated_len, 1)))
+        prefix_len = int((truncated_len - masked_content_len) / 2)
+        prefix = truncated_document[:prefix_len]
+        masked_content = truncated_document[prefix_len:prefix_len + masked_content_len]
+        suffix = truncated_document[prefix_len + masked_content_len:]
+
+        # Rearrange these substrings into the following form:
+        #   [prefix] MASK_CHAR [suffix] MASK_CHAR [masked_content] [pads]
         masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content
-        masked_string = masked_string + self.PAD_CHAR*(self.block_size - len(masked_string))
-        example_x = masked_string[:-1]
-        example_y = masked_string[1:]
-        
-        x = torch.tensor([self.stoi[c] for c in example_x], dtype=torch.long)
-        y = torch.tensor([self.stoi[c] for c in example_y], dtype=torch.long)
-        
+        pads_len = self.block_size - len(masked_string) + 1
+        pads = self.PAD_CHAR * pads_len
+        masked_string += pads
+
+        # We now use masked_string to construct the input and output example pair
+        inp = masked_string[:-1]
+        out = masked_string[1:]
+
+        # Making use of the vocabulary that you defined, encode the resulting input
+        # and output strings as Long tensors and return the resulting data point.
+        x = torch.tensor([self.stoi[ch] for ch in inp], dtype=torch.long)
+        y = torch.tensor([self.stoi[ch] for ch in out], dtype=torch.long)
+
         return x, y
         
 
