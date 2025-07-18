@@ -143,6 +143,7 @@ elif args.function == 'finetune':
     if args.reading_params_path is None:
         max_epochs = 75
     else:
+        model.load_state_dict(torch.load(args.reading_params_path))
         max_epochs = 10
     text = open(args.finetune_corpus_path, encoding='utf-8').read() 
     train_dataset = dataset.NameDataset(pretrain_dataset, text) 
